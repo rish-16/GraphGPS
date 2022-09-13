@@ -248,8 +248,8 @@ if __name__ == '__main__':
         split_names = ['val', 'test']
         batch_time = None
         
-        loaders = loaders[0]
-        loggers = loggers[0]
+        loader = loaders[0]
+        logger = loggers[0]
 
         for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
             # train_epoch(loggers[0], loaders[0], model, optimizer, scheduler)
