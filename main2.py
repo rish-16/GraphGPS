@@ -209,8 +209,16 @@ if __name__ == '__main__':
         
         loaders = create_loader()
         model = create_model()
+        optimizer = create_optimizer(model.parameters(), new_optimizer_config(cfg))
+        scheduler = create_scheduler(optimizer, new_scheduler_config(cfg))
+
+        logging.info(model)
+        logging.info(cfg)
+        cfg.params = params_count(model)
+        logging.info('Num parameters: %s', cfg.params)
         
-        print (loaders)
+        if cfg.train.mode == 'standard':
+            train(loggers, loaders, model, optimizer, scheduler)
 
     # batch data B=256
 
