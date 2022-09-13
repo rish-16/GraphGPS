@@ -234,51 +234,57 @@ if __name__ == '__main__':
         cfg.params = params_count(model)
         logging.info('Num parameters: %s', cfg.params)
         
-        if cfg.train.mode == 'standard':
-            # train(loggers, loaders, model, optimizer, scheduler)
+        # train(loggers, loaders, model, optimizer, scheduler)
 
-            start_epoch = 0
-            if cfg.train.auto_resume:
-                start_epoch = load_ckpt(model, optimizer, scheduler, cfg.train.epoch_resume)
-            if start_epoch == cfg.optim.max_epoch:
-                logging.info('Checkpoint found, Task already done')
-            else:
-                logging.info('Start from epoch {}'.format(start_epoch))
+        start_epoch = 0
+        if cfg.train.auto_resume:
+            start_epoch = load_ckpt(model, optimizer, scheduler, cfg.train.epoch_resume)
+        if start_epoch == cfg.optim.max_epoch:
+            logging.info('Checkpoint found, Task already done')
+        else:
+            logging.info('Start from epoch {}'.format(start_epoch))
 
-            num_splits = len(loggers)
-            split_names = ['val', 'test']
-            batch_time = None
+        num_splits = len(loggers)
+        split_names = ['val', 'test']
+        batch_time = None
+        
+        loaders = loaders[0]
+        loggers = loggers[0]
+
+        for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
+            # train_epoch(loggers[0], loaders[0], model, optimizer, scheduler)
             
-            loaders = loaders[0]
-            loggers = loggers[0]
+            model.train()
+            time_start = time.time()
 
-            for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
-                # train_epoch(loggers[0], loaders[0], model, optimizer, scheduler)
+            for batch in loader:
+                batch.split = 'train'
                 
-                model.train()
-                time_start = time.time()
+                optimizer.zero_grad()
+                batch.to(torch.device(cfg.device))
+                
+                pred, true = model(batch)
+                loss, pred_score = compute_loss(pred, true)
+                true = true.detach().to('cpu', non_blocking=True)
+                pred = pred_score.detach().to('cpu', non_blocking=True)
+                
+                loss.backward()
+                optimizer.step()
+                
+                logger.update_stats(true=true.detach().cpu(),
+                                    pred=pred_score.detach().cpu(), loss=loss.item(),
+                                    lr=scheduler.get_last_lr()[0],
+                                    time_used=time.time() - time_start,
+                                    params=cfg.params)
+                
+                time_end = time.time()
+                break # finish after first batch
 
-                for batch in loader:
-                    batch.split = 'train'
-                    optimizer.zero_grad()
-                    batch.to(torch.device(cfg.device))
-                    pred, true = model(batch)
-                    loss, pred_score = compute_loss(pred, true)
-                    loss.backward()
-                    optimizer.step()
-                    logger.update_stats(true=true.detach().cpu(),
-                                        pred=pred_score.detach().cpu(), loss=loss.item(),
-                                        lr=scheduler.get_last_lr()[0],
-                                        time_used=time.time() - time_start,
-                                        params=cfg.params)
-                    time_end = time.time()
-                    break # finish after first batch
+            batch_time = time_end - time_start
+            scheduler.step()
+            break # finish after first epoch
 
-                batch_time = time_end - time_start
-                scheduler.step()
-                break # finish after first epoch
-
-            print (f"****TIME TAKEN FOR 1 BATCH: {batch_time}")
+        print (f"****TIME TAKEN FOR 1 BATCH: {batch_time}")
 
     # batch data B=256
 
