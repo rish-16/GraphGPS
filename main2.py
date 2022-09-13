@@ -106,6 +106,39 @@ class PygPCQM4Mv2Dataset(InMemoryDataset):
         split_dict = replace_numpy_with_torchtensor(torch.load(osp.join(self.root, 'split_dict.pt')))
         return split_dict
 
+def run_loop_settings():
+    """Create main loop execution settings based on the current cfg.
+
+    Configures the main execution loop to run in one of two modes:
+    1. 'multi-seed' - Reproduces default behaviour of GraphGym when
+        args.repeats controls how many times the experiment run is repeated.
+        Each iteration is executed with a random seed set to an increment from
+        the previous one, starting at initial cfg.seed.
+    2. 'multi-split' - Executes the experiment run over multiple dataset splits,
+        these can be multiple CV splits or multiple standard splits. The random
+        seed is reset to the initial cfg.seed value for each run iteration.
+
+    Returns:
+        List of run IDs for each loop iteration
+        List of rng seeds to loop over
+        List of dataset split indices to loop over
+    """
+    if len(cfg.run_multiple_splits) == 0:
+        # 'multi-seed' run mode
+        num_iterations = args.repeat
+        seeds = [cfg.seed + x for x in range(num_iterations)]
+        split_indices = [cfg.dataset.split_index] * num_iterations
+        run_ids = seeds
+    else:
+        # 'multi-split' run mode
+        if args.repeat != 1:
+            raise NotImplementedError("Running multiple repeats of multiple "
+                                      "splits in one run is not supported.")
+        num_iterations = len(cfg.run_multiple_splits)
+        seeds = [cfg.seed] * num_iterations
+        split_indices = cfg.run_multiple_splits
+        run_ids = split_indices
+    return run_ids, seeds, split_indices
 
 if __name__ == '__main__':
     dataset = PygPCQM4Mv2Dataset()
