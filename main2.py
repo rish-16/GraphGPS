@@ -119,6 +119,7 @@ if __name__ == '__main__':
 
     args = parse_args()
     # Load config file
+    print ("CFG:", cfg)
     set_cfg(cfg)
     load_cfg(cfg, args)
     custom_set_out_dir(cfg, args.cfg_file, cfg.name_tag)
@@ -136,9 +137,9 @@ if __name__ == '__main__':
         seed_everything(cfg.seed)
         auto_select_device()
 
-        logging.info(f"[*] Run ID {run_id}: seed={cfg.seed}, "
-                     f"split_index={cfg.dataset.split_index}")
-        logging.info(f"    Starting now: {datetime.datetime.now()}")
+        # logging.info(f"[*] Run ID {run_id}: seed={cfg.seed}, "
+                    #  f"split_index={cfg.dataset.split_index}")
+        # logging.info(f"    Starting now: {datetime.datetime.now()}")
         
         model = create_model()
         print (model)
