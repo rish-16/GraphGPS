@@ -153,7 +153,8 @@ if __name__ == '__main__':
     args = parse_args()
     # Load config file
     print ("ARGS:", args)
-    # print ("CFG:", cfg)
+    print ("CFG:", cfg)
+    print (type(cfg), type(args))
     set_cfg(cfg)
     load_cfg(cfg, args)
     custom_set_out_dir(cfg, args.cfg_file, cfg.name_tag)
