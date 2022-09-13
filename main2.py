@@ -8,6 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 import torch
 
+from torch_geometric.graphgym.cmd_args import parse_args
 from torch_geometric.graphgym.config import (cfg, dump_cfg, set_agg_dir, set_cfg, load_cfg, makedirs_rm_exist)
 from torch_geometric.graphgym.model_builder import create_model
 
@@ -116,11 +117,36 @@ if __name__ == '__main__':
     print(dataset[100].y)
     print(dataset.get_idx_split())
 
-    # create model
-    model = create_model()
-    if cfg.train.finetune:
-        model = init_model_from_pretrained(model, cfg.train.finetune, cfg.train.freeze_pretrained)
-        print (model)
+    args = parse_args()
+    # Load config file
+    set_cfg(cfg)
+    load_cfg(cfg, args)
+    custom_set_out_dir(cfg, args.cfg_file, cfg.name_tag)
+    dump_cfg(cfg)
+    # Set Pytorch environment
+    torch.set_num_threads(cfg.num_threads)
+    # Repeat for multiple experiment runs
+    for run_id, seed, split_index in zip(*run_loop_settings()):
+        # Set configurations for each run
+        custom_set_run_dir(cfg, run_id)
+        set_printing()
+        cfg.dataset.split_index = split_index
+        cfg.seed = seed
+        cfg.run_id = run_id
+        seed_everything(cfg.seed)
+        auto_select_device()
+        if cfg.train.finetune:
+            cfg = load_pretrained_model_cfg(cfg)
+        logging.info(f"[*] Run ID {run_id}: seed={cfg.seed}, "
+                     f"split_index={cfg.dataset.split_index}")
+        logging.info(f"    Starting now: {datetime.datetime.now()}")
+        
+        model = create_model()
+
+        # create model
+        if cfg.train.finetune:
+            model = init_model_from_pretrained(model, cfg.train.finetune, cfg.train.freeze_pretrained)
+            print (model)
 
     # batch data B=256
 

@@ -151,9 +151,9 @@ class GPSLayer(nn.Module):
         if global_model_type == 'None':
             self.self_attn = None
         elif global_model_type == 'Transformer':
-            self.self_attn = RishAttention(dim_h, heads=num_heads, dropout=self.attn_dropout)
+            # self.self_attn = RishAttention(dim_h, heads=num_heads, dropout=self.attn_dropout)
             
-            # self.self_attn = torch.nn.MultiheadAttention(dim_h, num_heads, dropout=self.attn_dropout, batch_first=True)
+            self.self_attn = torch.nn.MultiheadAttention(dim_h, num_heads, dropout=self.attn_dropout, batch_first=True)
             
             # self.global_model = torch.nn.TransformerEncoderLayer(
             #     d_model=dim_h, nhead=num_heads,
