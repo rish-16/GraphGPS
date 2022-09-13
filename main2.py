@@ -142,11 +142,9 @@ if __name__ == '__main__':
         logging.info(f"    Starting now: {datetime.datetime.now()}")
         
         model = create_model()
+        print (model)
 
-        # create model
-        if cfg.train.finetune:
-            model = init_model_from_pretrained(model, cfg.train.finetune, cfg.train.freeze_pretrained)
-            print (model)
+        
 
     # batch data B=256
 
