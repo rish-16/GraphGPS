@@ -16,7 +16,7 @@ dataset:
   edge_encoder: True
   edge_encoder_name: Bond
   edge_encoder_bn: False
-posenc_RWSE:
+posenc_LapPE:
   enable: True
   kernel:
     times_func: range(1,17)
