@@ -14,10 +14,10 @@ from torch_geometric.graphgym.config import cfg
 from torch_geometric.graphgym.loader import load_pyg, load_ogb, set_dataset_attr
 from torch_geometric.graphgym.register import register_loader
 
-from graphgps.loader.dataset.aqsol_molecules import AQSOL
-from graphgps.loader.dataset.coco_superpixels import COCOSuperpixels
+# from graphgps.loader.dataset.aqsol_molecules import AQSOL
+# from graphgps.loader.dataset.coco_superpixels import COCOSuperpixels
 from graphgps.loader.dataset.malnet_tiny import MalNetTiny
-from graphgps.loader.dataset.voc_superpixels import VOCSuperpixels
+# from graphgps.loader.dataset.voc_superpixels import VOCSuperpixels
 from graphgps.loader.split_generator import (prepare_splits,
                                              set_dataset_splits)
 from graphgps.transform.posenc_stats import compute_posenc_stats
