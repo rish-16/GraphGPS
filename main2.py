@@ -140,6 +140,35 @@ def run_loop_settings():
         run_ids = split_indices
     return run_ids, seeds, split_indices
 
+def custom_set_out_dir(cfg, cfg_fname, name_tag):
+    """Set custom main output directory path to cfg.
+    Include the config filename and name_tag in the new :obj:`cfg.out_dir`.
+
+    Args:
+        cfg (CfgNode): Configuration node
+        cfg_fname (string): Filename for the yaml format configuration file
+        name_tag (string): Additional name tag to identify this execution of the
+            configuration file, specified in :obj:`cfg.name_tag`
+    """
+    run_name = os.path.splitext(os.path.basename(cfg_fname))[0]
+    run_name += f"-{name_tag}" if name_tag else ""
+    cfg.out_dir = os.path.join(cfg.out_dir, run_name)
+
+
+def custom_set_run_dir(cfg, run_id):
+    """Custom output directory naming for each experiment run.
+
+    Args:
+        cfg (CfgNode): Configuration node
+        run_id (int): Main for-loop iter id (the random seed or dataset split)
+    """
+    cfg.run_dir = os.path.join(cfg.out_dir, str(run_id))
+    # Make output directory
+    if cfg.train.auto_resume:
+        os.makedirs(cfg.run_dir, exist_ok=True)
+    else:
+        makedirs_rm_exist(cfg.run_dir)    
+
 if __name__ == '__main__':
     dataset = PygPCQM4Mv2Dataset()
     print(dataset)
@@ -155,6 +184,7 @@ if __name__ == '__main__':
     print ("ARGS:", args)
     print ("CFG:", cfg)
     print (type(cfg), type(args))
+
     set_cfg(cfg)
     load_cfg(cfg, args)
     custom_set_out_dir(cfg, args.cfg_file, cfg.name_tag)
