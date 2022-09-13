@@ -207,8 +207,10 @@ if __name__ == '__main__':
                     #  f"split_index={cfg.dataset.split_index}")
         # logging.info(f"    Starting now: {datetime.datetime.now()}")
         
+        loaders = create_loader()
         model = create_model()
-        print (model)
+        
+        print (loaders)
 
     # batch data B=256
 
