@@ -17,6 +17,7 @@ from torch_geometric.graphgym.utils.agg_runs import agg_runs
 from torch_geometric.graphgym.utils.comp_budget import params_count
 from torch_geometric.graphgym.utils.device import auto_select_device
 from torch_geometric.graphgym.register import train_dict
+from torch_geometric.graphgym.loss import compute_loss
 from torch_geometric import seed_everything
 
 from graphgps.finetuning import load_pretrained_model_cfg, init_model_from_pretrained
