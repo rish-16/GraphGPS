@@ -180,6 +180,21 @@ def custom_set_run_dir(cfg, run_id):
     else:
         makedirs_rm_exist(cfg.run_dir)    
 
+def new_optimizer_config(cfg):
+    return OptimizerConfig(optimizer=cfg.optim.optimizer,
+                           base_lr=cfg.optim.base_lr,
+                           weight_decay=cfg.optim.weight_decay,
+                           momentum=cfg.optim.momentum)
+
+def new_scheduler_config(cfg):
+    return ExtendedSchedulerConfig(
+        scheduler=cfg.optim.scheduler,
+        steps=cfg.optim.steps, lr_decay=cfg.optim.lr_decay,
+        max_epoch=cfg.optim.max_epoch, reduce_factor=cfg.optim.reduce_factor,
+        schedule_patience=cfg.optim.schedule_patience, min_lr=cfg.optim.min_lr,
+        num_warmup_epochs=cfg.optim.num_warmup_epochs,
+        train_mode=cfg.train.mode, eval_period=cfg.train.eval_period)
+
 if __name__ == '__main__':
     dataset = PygPCQM4Mv2Dataset()
     print(dataset)
