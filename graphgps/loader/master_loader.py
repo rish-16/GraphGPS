@@ -8,13 +8,10 @@ import torch
 import torch_geometric.transforms as T
 from numpy.random import default_rng
 from ogb.graphproppred import PygGraphPropPredDataset
-from torch_geometric.datasets import (GNNBenchmarkDataset, Planetoid, TUDataset,
-                                      WikipediaNetwork, ZINC)
 from torch_geometric.graphgym.config import cfg
 from torch_geometric.graphgym.loader import load_pyg, load_ogb, set_dataset_attr
 from torch_geometric.graphgym.register import register_loader
-
-from graphgps.loader.dataset.malnet_tiny import MalNetTiny
+Tiny
 from graphgps.loader.split_generator import (prepare_splits,
                                              set_dataset_splits)
 from graphgps.transform.posenc_stats import compute_posenc_stats
@@ -93,62 +90,9 @@ def load_dataset_master(format, name, dataset_dir):
     Returns:
         PyG dataset object with applied perturbation transforms and data splits
     """
-    if format.startswith('PyG-'):
-        pyg_dataset_id = format.split('-', 1)[1]
-        dataset_dir = osp.join(dataset_dir, pyg_dataset_id)
+    subset = name.split('-', 1)[1]
+    dataset = preformat_OGB_PCQM4Mv2(dataset_dir, subset)
 
-        if pyg_dataset_id == 'GNNBenchmarkDataset':
-            dataset = preformat_GNNBenchmarkDataset(dataset_dir, name)
-
-        elif pyg_dataset_id == 'MalNetTiny':
-            dataset = preformat_MalNetTiny(dataset_dir, feature_set=name)
-
-        elif pyg_dataset_id == 'Planetoid':
-            dataset = Planetoid(dataset_dir, name)
-
-        elif pyg_dataset_id == 'TUDataset':
-            dataset = preformat_TUDataset(dataset_dir, name)
-
-        elif pyg_dataset_id == 'WikipediaNetwork':
-            if name == 'crocodile':
-                raise NotImplementedError(f"crocodile not implemented yet")
-            dataset = WikipediaNetwork(dataset_dir, name)
-
-        elif pyg_dataset_id == 'ZINC':
-            dataset = preformat_ZINC(dataset_dir, name)
-
-        else:
-            raise ValueError(f"Unexpected PyG Dataset identifier: {format}")
-
-    # GraphGym default loader for Pytorch Geometric datasets
-    elif format == 'PyG':
-        dataset = load_pyg(name, dataset_dir)
-
-    elif format == 'OGB':
-        if name.startswith('ogbg'):
-            dataset = preformat_OGB_Graph(dataset_dir, name.replace('_', '-'))
-
-        elif name.startswith('PCQM4Mv2-'):
-            subset = name.split('-', 1)[1]
-            dataset = preformat_OGB_PCQM4Mv2(dataset_dir, subset)
-
-        ### Link prediction datasets.
-        elif name.startswith('ogbl-'):
-            # GraphGym default loader.
-            dataset = load_ogb(name, dataset_dir)
-            # OGB link prediction datasets are binary classification tasks,
-            # however the default loader creates float labels => convert to int.
-            def convert_to_int(ds, prop):
-                tmp = getattr(ds.data, prop).int()
-                set_dataset_attr(ds, prop, tmp, len(tmp))
-            convert_to_int(dataset, 'train_edge_label')
-            convert_to_int(dataset, 'val_edge_label')
-            convert_to_int(dataset, 'test_edge_label')
-
-        else:
-            raise ValueError(f"Unsupported OGB(-derived) dataset: {name}")
-    else:
-        raise ValueError(f"Unknown data format: {format}")
     log_loaded_dataset(dataset, format, name)
 
     # Precompute necessary statistics for positional encodings.
@@ -197,7 +141,6 @@ def load_dataset_master(format, name, dataset_dir):
 
     return dataset
 
-
 def compute_indegree_histogram(dataset):
     """Compute histogram of in-degree of nodes needed for PNAConv.
 
@@ -217,119 +160,6 @@ def compute_indegree_histogram(dataset):
         max_degree = max(max_degree, d.max().item())
         deg += torch.bincount(d, minlength=deg.numel())
     return deg.numpy().tolist()[:max_degree + 1]
-
-
-def preformat_GNNBenchmarkDataset(dataset_dir, name):
-    """Load and preformat datasets from PyG's GNNBenchmarkDataset.
-
-    Args:
-        dataset_dir: path where to store the cached dataset
-        name: name of the specific dataset in the TUDataset class
-
-    Returns:
-        PyG dataset object
-    """
-    tf_list = []
-    if name in ['MNIST', 'CIFAR10']:
-        tf_list = [concat_x_and_pos]  # concat pixel value and pos. coordinate
-        tf_list.append(partial(typecast_x, type_str='float'))
-    else:
-        ValueError(f"Loading dataset '{name}' from "
-                   f"GNNBenchmarkDataset is not supported.")
-
-    dataset = join_dataset_splits(
-        [GNNBenchmarkDataset(root=dataset_dir, name=name, split=split)
-         for split in ['train', 'val', 'test']]
-    )
-    pre_transform_in_memory(dataset, T.Compose(tf_list))
-
-    return dataset
-
-
-def preformat_MalNetTiny(dataset_dir, feature_set):
-    """Load and preformat Tiny version (5k graphs) of MalNet
-
-    Args:
-        dataset_dir: path where to store the cached dataset
-        feature_set: select what node features to precompute as MalNet
-            originally doesn't have any node nor edge features
-
-    Returns:
-        PyG dataset object
-    """
-    if feature_set in ['none', 'Constant']:
-        tf = T.Constant()
-    elif feature_set == 'OneHotDegree':
-        tf = T.OneHotDegree()
-    elif feature_set == 'LocalDegreeProfile':
-        tf = T.LocalDegreeProfile()
-    else:
-        raise ValueError(f"Unexpected transform function: {feature_set}")
-
-    dataset = MalNetTiny(dataset_dir)
-    dataset.name = 'MalNetTiny'
-    logging.info(f'Computing "{feature_set}" node features for MalNetTiny.')
-    pre_transform_in_memory(dataset, tf)
-
-    split_dict = dataset.get_idx_split()
-    dataset.split_idxs = [split_dict['train'],
-                          split_dict['valid'],
-                          split_dict['test']]
-
-    return dataset
-
-
-def preformat_OGB_Graph(dataset_dir, name):
-    """Load and preformat OGB Graph Property Prediction datasets.
-
-    Args:
-        dataset_dir: path where to store the cached dataset
-        name: name of the specific OGB Graph dataset
-
-    Returns:
-        PyG dataset object
-    """
-    dataset = PygGraphPropPredDataset(name=name, root=dataset_dir)
-    s_dict = dataset.get_idx_split()
-    dataset.split_idxs = [s_dict[s] for s in ['train', 'valid', 'test']]
-
-    if name == 'ogbg-ppa':
-        # ogbg-ppa doesn't have any node features, therefore add zeros but do
-        # so dynamically as a 'transform' and not as a cached 'pre-transform'
-        # because the dataset is big (~38.5M nodes), already taking ~31GB space
-        def add_zeros(data):
-            data.x = torch.zeros(data.num_nodes, dtype=torch.long)
-            return data
-        dataset.transform = add_zeros
-    elif name == 'ogbg-code2':
-        from graphgps.loader.ogbg_code2_utils import idx2vocab, \
-            get_vocab_mapping, augment_edge, encode_y_to_arr
-        num_vocab = 5000  # The number of vocabulary used for sequence prediction
-        max_seq_len = 5  # The maximum sequence length to predict
-
-        seq_len_list = np.array([len(seq) for seq in dataset.data.y])
-        logging.info(f"Target sequences less or equal to {max_seq_len} is "
-            f"{np.sum(seq_len_list <= max_seq_len) / len(seq_len_list)}")
-
-        # Building vocabulary for sequence prediction. Only use training data.
-        vocab2idx, idx2vocab_local = get_vocab_mapping(
-            [dataset.data.y[i] for i in s_dict['train']], num_vocab)
-        logging.info(f"Final size of vocabulary is {len(vocab2idx)}")
-        idx2vocab.extend(idx2vocab_local)  # Set to global variable to later access in CustomLogger
-
-        # Set the transform function:
-        # augment_edge: add next-token edge as well as inverse edges. add edge attributes.
-        # encode_y_to_arr: add y_arr to PyG data object, indicating the array repres
-        dataset.transform = T.Compose(
-            [augment_edge,
-             lambda data: encode_y_to_arr(data, vocab2idx, max_seq_len)])
-
-        # Subset graphs to a maximum size (number of nodes) limit.
-        pre_transform_in_memory(dataset, partial(clip_graphs_to_size,
-                                                 size_limit=1000))
-
-    return dataset
-
 
 def preformat_OGB_PCQM4Mv2(dataset_dir, name):
     """Load and preformat PCQM4Mv2 from OGB LSC.
@@ -388,46 +218,6 @@ def preformat_OGB_PCQM4Mv2(dataset_dir, name):
         raise ValueError(f'Unexpected OGB PCQM4Mv2 subset choice: {name}')
     dataset.split_idxs = split_idxs
     return dataset
-
-
-def preformat_TUDataset(dataset_dir, name):
-    """Load and preformat datasets from PyG's TUDataset.
-
-    Args:
-        dataset_dir: path where to store the cached dataset
-        name: name of the specific dataset in the TUDataset class
-
-    Returns:
-        PyG dataset object
-    """
-    if name in ['DD', 'NCI1', 'ENZYMES', 'PROTEINS']:
-        func = None
-    elif name.startswith('IMDB-') or name == "COLLAB":
-        func = T.Constant()
-    else:
-        ValueError(f"Loading dataset '{name}' from TUDataset is not supported.")
-    dataset = TUDataset(dataset_dir, name, pre_transform=func)
-    return dataset
-
-
-def preformat_ZINC(dataset_dir, name):
-    """Load and preformat ZINC datasets.
-
-    Args:
-        dataset_dir: path where to store the cached dataset
-        name: select 'subset' or 'full' version of ZINC
-
-    Returns:
-        PyG dataset object
-    """
-    if name not in ['subset', 'full']:
-        raise ValueError(f"Unexpected subset choice for ZINC dataset: {name}")
-    dataset = join_dataset_splits(
-        [ZINC(root=dataset_dir, subset=(name == 'subset'), split=split)
-         for split in ['train', 'val', 'test']]
-    )
-    return dataset
-
 
 def join_dataset_splits(datasets):
     """Join train, val, test datasets into one dataset object.
