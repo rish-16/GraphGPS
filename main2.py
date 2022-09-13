@@ -183,18 +183,8 @@ def custom_set_run_dir(cfg, run_id):
 if __name__ == '__main__':
     dataset = PygPCQM4Mv2Dataset()
     print(dataset)
-    print(dataset.data.edge_index)
-    print(dataset.data.edge_index.shape)
-    print(dataset.data.x.shape)
-    print(dataset[100])
-    print(dataset[100].y)
-    print(dataset.get_idx_split())
 
     args = parse_args()
-    # Load config file
-    print ("ARGS:", args)
-    print ("CFG:", cfg)
-    print (type(cfg), type(args))
 
     set_cfg(cfg)
     load_cfg(cfg, args)
@@ -219,8 +209,6 @@ if __name__ == '__main__':
         
         model = create_model()
         print (model)
-
-        
 
     # batch data B=256
 
