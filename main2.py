@@ -8,6 +8,9 @@ import pandas as pd
 from tqdm import tqdm
 import torch
 
+from torch_geometric.graphgym.config import (cfg, dump_cfg, set_agg_dir, set_cfg, load_cfg, makedirs_rm_exist)
+from torch_geometric.graphgym.model_builder import create_model
+
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.data import Data
 
@@ -112,3 +115,26 @@ if __name__ == '__main__':
     print(dataset[100])
     print(dataset[100].y)
     print(dataset.get_idx_split())
+
+    # create model
+    model = create_model()
+    if cfg.train.finetune:
+        model = init_model_from_pretrained(model, cfg.train.finetune, cfg.train.freeze_pretrained)
+        print (model)
+
+    # batch data B=256
+
+    # get first batch
+
+    # run single inference 
+
+    # get individual timings
+        # [x] timing to create PE/SE
+        # [ ] timing per layer
+        # [ ] timing for local MP (if it exists)
+        # [ ] timing for global MP (if it exists)
+        # [ ] timing for each MP step
+        # [ ] timing for softmax, project, dot product
+
+
+    
