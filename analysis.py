@@ -1,17 +1,41 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import matplotlib 
+
+font = {'family' : 'normal',
+        'size'   : 16}
+
+matplotlib.rc('font', **font)
 
 # seconds
 SINGLE_BATCH_256_TRAIN_TIME_SMALL = 1.0084445476531982
-SINGLE_BATCH_256_TRAIN_TIME_VSMALL_HEADS = None
-SINGLE_BATCH_256_TRAIN_TIME_VSMALL_DIMS = None
-SINGLE_BATCH_256_TRAIN_TIME_VSMALL_LAYERS = None
-SINGLE_BATCH_256_TRAIN_TIME_VSMALL_BS = None
+SINGLE_BATCH_256_TRAIN_TIME_VSMALL_HEADS = 1.0015337467193604
+SINGLE_BATCH_256_TRAIN_TIME_VSMALL_DIMS = 1.004216194152832
+SINGLE_BATCH_256_TRAIN_TIME_VSMALL_LAYERS = 1.0355498790740967
+SINGLE_BATCH_256_TRAIN_TIME_VSMALL_BS = None # doesn't exist
 
-SINGLE_BATCH_256_TRAIN_TIME_VVSMALL_HEADS = None
-SINGLE_BATCH_256_TRAIN_TIME_VVSMALL_DIMS = None
-SINGLE_BATCH_256_TRAIN_TIME_VVSMALL_LAYERS = None
+SINGLE_BATCH_256_TRAIN_TIME_VVSMALL_HEADS = 0.9982786178588867
+SINGLE_BATCH_256_TRAIN_TIME_VVSMALL_DIMS = 0.9732253551483154
+SINGLE_BATCH_256_TRAIN_TIME_VVSMALL_LAYERS = 0.9351785182952881
 SINGLE_BATCH_256_TRAIN_TIME_VVSMALL_BS = None # doesn't exist
+
+# heads, dims, layers
+df = pd.DataFrame([
+    ["S", 0, 0, 1.00844454765319820],
+    ["V-S", 1.0015337467193604, 1.004216194152832, 1.0355498790740967],
+    ["VV-S", 0.9982786178588867, 0.9732253551483154, 0.9351785182952881]
+], columns=["Model", "# Heads", "Embed Dims", "# Layers"])
+
+df.plot(x='Model',
+        # y='Wall clock time (seconds)',
+        kind='bar',
+        stacked=False,
+        title='Wall clock timings B=256')        
+plt.xticks(rotation = 45)
+plt.show()
+
+# --------------------------------------------------------------------
 
 SINGLE_BATCH_256_LMP_INFERENCE_TIME_SMALL = None
 SINGLE_BATCH_256_LMP_INFERENCE_TIME_VSMALL_HEADS = None

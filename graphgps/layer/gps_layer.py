@@ -151,8 +151,6 @@ class GPSLayer(nn.Module):
         if global_model_type == 'None':
             self.self_attn = None
         elif global_model_type == 'Transformer':
-            # self.self_attn = RishAttention(dim_h, heads=num_heads, dropout=self.attn_dropout)
-            
             self.self_attn = torch.nn.MultiheadAttention(dim_h, num_heads, dropout=self.attn_dropout, batch_first=True)
             
             # self.global_model = torch.nn.TransformerEncoderLayer(
@@ -160,9 +158,7 @@ class GPSLayer(nn.Module):
             #     dim_feedforward=2048, dropout=0.1, activation=F.relu,
             #     layer_norm_eps=1e-5, batch_first=True)
         elif global_model_type == 'Performer':
-            self.self_attn = SelfAttention(
-                dim=dim_h, heads=num_heads,
-                dropout=self.attn_dropout, causal=False)
+            self.self_attn = SelfAttention(dim=dim_h, heads=num_heads, dropout=self.attn_dropout, causal=False)
         elif global_model_type == "BigBird":
             bigbird_cfg.dim_hidden = dim_h
             bigbird_cfg.n_heads = num_heads
@@ -215,11 +211,17 @@ class GPSLayer(nn.Module):
                 es_data = None
                 if self.equivstable_pe:
                     es_data = batch.pe_EquivStableLapPE
+
+                LMP_START = time.time()
                 local_out = self.local_model(Batch(batch=batch,
                                                    x=h,
                                                    edge_index=batch.edge_index,
                                                    edge_attr=batch.edge_attr,
                                                    pe_EquivStableLapPE=es_data))
+                LMP_END = time.time()
+                TIMEDIFF = LMP_END - LMP_START
+                print ("***LOCAL MESSAGE PASSING TIME:", TIMEDIFF)
+                
                 # GatedGCN does residual connection and dropout internally.
                 h_local = local_out.x
                 batch.edge_attr = local_out.edge_attr
@@ -242,7 +244,10 @@ class GPSLayer(nn.Module):
         if self.self_attn is not None:
             h_dense, mask = to_dense_batch(h, batch.batch)
             if self.global_model_type == 'Transformer':
+                GMP_START = time.time()
                 h_attn = self._sa_block(h_dense, None, ~mask)[mask]
+                GMP_END = time.time()
+                print ("***TIME FOR GLOBAL MP:", GMP_END - GMP_START)
             elif self.global_model_type == 'Performer':
                 h_attn = self.self_attn(h_dense, mask=mask)[mask]
             elif self.global_model_type == 'BigBird':
