@@ -6,16 +6,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import math
+import math, time
 from typing import Optional, Tuple
 
 import torch
-# from fairseq import utils
-# from fairseq.modules.fairseq_dropout import FairseqDropout
-# from fairseq.modules.quant_noise import quant_noise
 import torch.nn as nn
 from torch import Tensor
-
 
 class RishAttention(nn.Module):
     """Multi-headed attention.
@@ -123,6 +119,7 @@ class RishAttention(nn.Module):
                 assert value is not None
                 assert src_len, bsz == value.shape[:2]
 
+        
         q = self.q_proj(query)
         k = self.k_proj(query)
         v = self.v_proj(query)
@@ -157,7 +154,11 @@ class RishAttention(nn.Module):
         if key_padding_mask is not None:
             assert key_padding_mask.size(1) == bsz
             assert key_padding_mask.size(0) == src_len
+
+        DP_START_TIME = time.time()
         attn_weights = torch.bmm(q, k.transpose(1, 2))
+        DP_END_TIME = time.time()
+        print ("******dot product time:", DP_END_TIME - DP_START_TIME)
         attn_weights = self.apply_sparse_mask(attn_weights, tgt_len, src_len, bsz)
 
         assert list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
@@ -181,16 +182,23 @@ class RishAttention(nn.Module):
         if before_softmax:
             return attn_weights, v
 
+        SOFTMAX_START_TIME = time.time()
         attn_weights_float = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32)
+        SOFTMAX_END_TIME = time.time()
+        print ("******softmax time:", SOFTMAX_END_TIME - SOFTMAX_START_TIME)
         attn_weights = attn_weights_float.type_as(attn_weights)
         attn_probs = self.dropout_module(attn_weights)
 
         assert v is not None
+
         attn = torch.bmm(attn_probs, v)
         assert list(attn.size()) == [bsz * self.num_heads, tgt_len, self.head_dim]
 
         attn = attn.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
+        PROJ_START_TIME = time.time()
         attn = self.out_proj(attn)
+        PROJ_END_TIME = time.time()
+        print ("******projection time:", PROJ_END_TIME - PROJ_START_TIME)
 
         attn_weights: Optional[Tensor] = None
         if need_weights:

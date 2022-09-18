@@ -186,6 +186,7 @@ class GPSLayer(nn.Module):
                 h_attn = self._sa_block(h_dense, None, ~mask)[mask]
                 GMP_END = time.time()
                 print ("***TIME FOR GLOBAL MP:", GMP_END - GMP_START)
+                print ("\n")
             elif self.global_model_type == 'Performer':
                 h_attn = self.self_attn(h_dense, mask=mask)[mask]
             elif self.global_model_type == 'BigBird':
