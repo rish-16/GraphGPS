@@ -33,7 +33,7 @@ model:
   loss_fun: l1
   graph_pooling: mean
 gt:
-  layer_type: CustomGatedGCN+Transformer
+  layer_type: GINE+Transformer
   layers: 5
   n_heads: 1
   dim_hidden: 304  # `gt.dim_hidden` must match `gnn.dim_inner`
