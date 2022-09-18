@@ -173,7 +173,7 @@ class RishAttention(nn.Module):
             # don't attend to padding symbols
             attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
             attn_weights = attn_weights.masked_fill(
-                key_padding_mask.unsqueeze(1).unsqueeze(2).to(torch.bool),
+                key_padding_mask.T.unsqueeze(1).unsqueeze(2).to(torch.bool),
                 float("-inf"),
             )
             attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
