@@ -158,7 +158,7 @@ class RishAttention(nn.Module):
         DP_START_TIME = time.time()
         attn_weights = torch.bmm(q, k.transpose(1, 2))
         DP_END_TIME = time.time()
-        print ("******dot product time:", DP_END_TIME - DP_START_TIME)
+        # print ("******dot product time:", DP_END_TIME - DP_START_TIME)
         attn_weights = self.apply_sparse_mask(attn_weights, tgt_len, src_len, bsz)
 
         assert list(attn_weights.size()) == [bsz * self.num_heads, tgt_len, src_len]
@@ -215,7 +215,9 @@ class RishAttention(nn.Module):
             "proj": PROJ_END_TIME - PROJ_START_TIME
         }
 
-        return attn, attn_weights, attn_stats
+        print (attn_stats)
+
+        return attn, attn_weights
 
     def apply_sparse_mask(self, attn_weights, tgt_len: int, src_len: int, bsz: int):
         return attn_weights

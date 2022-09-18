@@ -169,7 +169,7 @@ class GPSLayer(nn.Module):
                     h_local = self.local_model(h, batch.edge_index, batch.edge_attr)
                 LMP_END = time.time()
                 TIMEDIFF = LMP_END - LMP_START
-                print ("***LOCAL MESSAGE PASSING TIME:", TIMEDIFF)
+                # print ("***LOCAL MESSAGE PASSING TIME:", TIMEDIFF)
 
                 h_local = self.dropout_local(h_local)
                 h_local = h_in1 + h_local  # Residual connection.
@@ -185,9 +185,9 @@ class GPSLayer(nn.Module):
             h_dense, mask = to_dense_batch(h, batch.batch)
             if self.global_model_type == 'Transformer':
                 GMP_START = time.time()
-                h_attn, attn_stats = self._sa_block(h_dense, None, ~mask)[mask]
+                h_attn = self._sa_block(h_dense, None, ~mask)[mask]
                 GMP_END = time.time()
-                print ("***TIME FOR GLOBAL MP:", GMP_END - GMP_START)
+                # print ("***TIME FOR GLOBAL MP:", GMP_END - GMP_START)
                 print ("\n")
             elif self.global_model_type == 'Performer':
                 h_attn = self.self_attn(h_dense, mask=mask)[mask]
@@ -221,27 +221,23 @@ class GPSLayer(nn.Module):
             "local_mp": LMP_END - LMP_START,
             "global_mp": GMP_END - GMP_START,
             "total_batch_time": END_TIME - START_TIME,
-            "global_attn": attn_stats
         }
 
         print (time_stats)
 
-        with open(f"LOGS/time_stats.json") as f:
-            json.dump(time_stats, f)
-
         batch.x = h
-        return batch, time_stats
+        return batch
 
     def _sa_block(self, x, attn_mask, key_padding_mask):
         """Self-attention block.
         """
-        x, _, attn_stats = self.self_attn(x, x, x,
+        x = self.self_attn(x, x, x,
                             attn_bias=None,
                             attn_mask=attn_mask,
                             key_padding_mask=key_padding_mask,
                             need_weights=False
-                        )
-        return x, attn_stats
+                        )[0]
+        return x
 
     def _ff_block(self, x):
         """Feed Forward block.
