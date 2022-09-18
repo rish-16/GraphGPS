@@ -109,15 +109,28 @@ class RishAttention(nn.Module):
                 weights for each head. Implies *need_weights*. Default:
                 return the average attention weights over all heads.
         """
+
+        # if self.batch_first and is_batched:
+            # make sure that the transpose op does not affect the "is" property
+        if key is value:
+            if query is key:
+                query = key = value = query.transpose(1, 0)
+            else:
+                query, key = [x.transpose(1, 0) for x in (query, key)]
+                value = key
+        else:
+            query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
+
+
         if need_head_weights:
             need_weights = True
 
-        tgt_len, bsz, embed_dim = query.size()
+        bsz, tgt_len, embed_dim = query.size()
         src_len = tgt_len
         assert embed_dim == self.embed_dim, f"query dim {embed_dim} != {self.embed_dim}"
-        assert list(query.size()) == [tgt_len, bsz, embed_dim]
+        assert list(query.size()) == [bsz, tgt_len, embed_dim]
         if key is not None:
-            src_len, key_bsz, _ = key.size()
+            key_bsz, src_len, _ = key.size()
             if not torch.jit.is_scripting():
                 assert key_bsz == bsz
                 assert value is not None
@@ -155,6 +168,7 @@ class RishAttention(nn.Module):
             key_padding_mask = None
 
         if key_padding_mask is not None:
+            print (key_padding_mask.shape, bsz, src_len, query.size())
             assert key_padding_mask.size(0) == bsz
             assert key_padding_mask.size(1) == src_len
         attn_weights = torch.bmm(q, k.transpose(1, 2))
