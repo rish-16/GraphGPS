@@ -198,8 +198,6 @@ def new_scheduler_config(cfg):
 
 if __name__ == '__main__':
     dataset = PygPCQM4Mv2Dataset()
-    print(dataset)
-
     args = parse_args()
 
     set_cfg(cfg)
@@ -265,8 +263,7 @@ if __name__ == '__main__':
                 optimizer.zero_grad()
                 batch.to(torch.device(cfg.device))
                 
-                (pred, true), TIME_STATS = model(batch)
-                print (TIME_STATS)
+                pred, true = model(batch, exp_name=f"{cfg.gt.layer_type}-{cfg.gt.layers}-{cfg.gt.n_heads}-{cfg.gt.dim_hidden}")
                 loss, pred_score = compute_loss(pred, true)
                 true = true.detach().to('cpu', non_blocking=True)
                 pred = pred_score.detach().to('cpu', non_blocking=True)
@@ -287,21 +284,4 @@ if __name__ == '__main__':
             scheduler.step()
             break # finish after first epoch
 
-        print (f"****TIME TAKEN FOR 1 BATCH: {batch_time}")
-
-    # batch data B=256
-
-    # get first batch
-
-    # run single inference 
-
-    # get individual timings
-        # [x] timing to create PE/SE
-        # [ ] timing per layer
-        # [ ] timing for local MP (if it exists)
-        # [ ] timing for global MP (if it exists)
-        # [ ] timing for each MP step
-        # [ ] timing for softmax, project, dot product
-
-
-    
+        print (f"****TIME TAKEN FOR 1 BATCH, full model: {batch_time}")

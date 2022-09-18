@@ -1,4 +1,4 @@
-import time
+import time, json
 import numpy as np
 import torch
 import torch.nn as nn
@@ -132,7 +132,9 @@ class GPSLayer(nn.Module):
         self.ff_dropout1 = nn.Dropout(dropout)
         self.ff_dropout2 = nn.Dropout(dropout)
 
-    def forward(self, batch):
+    def forward(self, batch, exp_name=""):
+
+        START_TIME = time.time()
         h = batch.x
         h_in1 = h  # for first residual connection
 
@@ -213,11 +215,19 @@ class GPSLayer(nn.Module):
         if self.batch_norm:
             h = self.norm2(h)
 
+        END_TIME = time.time()
+
         time_stats = {
             "local_mp": LMP_END - LMP_START,
             "global_mp": GMP_END - GMP_START,
+            "total_batch_time": END_TIME - START_TIME,
             "global_attn": attn_stats
         }
+
+        print (time_stats)
+
+        with open(f"LOGS/{exp_name}_time_stats.json") as f:
+            json.dump(time_stats, f)
 
         batch.x = h
         return batch, time_stats
