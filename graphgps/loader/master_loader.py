@@ -396,7 +396,7 @@ def preformat_OGB_PCQM4Mv2(dataset_dir, name):
                       ]
     elif name == 'subset':
         # Further subset the training set for faster debugging.
-        subset_ratio = 0.05
+        subset_ratio = 0.0025
         subtrain_idx = train_idx[:int(subset_ratio * len(train_idx))]
         subvalid_idx = valid_idx[:50000]
         subtest_idx = split_idx['valid']  # The original 'valid' as testing set.
