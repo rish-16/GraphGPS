@@ -218,7 +218,7 @@ if __name__ == '__main__':
         cfg.run_id = run_id
         seed_everything(cfg.seed)
         # auto_select_device()
-        cfg.device = 'cuda:0'
+        cfg.device = f'cuda:{str(args.gpu_dev)}'
 
         # logging.info(f"[*] Run ID {run_id}: seed={cfg.seed}, "
                     #  f"split_index={cfg.dataset.split_index}")
