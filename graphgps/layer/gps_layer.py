@@ -132,7 +132,7 @@ class GPSLayer(nn.Module):
         self.ff_dropout1 = nn.Dropout(dropout)
         self.ff_dropout2 = nn.Dropout(dropout)
 
-    def forward(self, batch, exp_name=""):
+    def forward(self, batch):
 
         START_TIME = time.time()
         h = batch.x
@@ -226,7 +226,7 @@ class GPSLayer(nn.Module):
 
         print (time_stats)
 
-        with open(f"LOGS/{exp_name}_time_stats.json") as f:
+        with open(f"LOGS/time_stats.json") as f:
             json.dump(time_stats, f)
 
         batch.x = h

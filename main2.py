@@ -263,7 +263,7 @@ if __name__ == '__main__':
                 optimizer.zero_grad()
                 batch.to(torch.device(cfg.device))
                 
-                pred, true = model(batch, exp_name=f"{cfg.gt.layer_type}-{cfg.gt.layers}-{cfg.gt.n_heads}-{cfg.gt.dim_hidden}")
+                pred, true = model(batch)
                 loss, pred_score = compute_loss(pred, true)
                 true = true.detach().to('cpu', non_blocking=True)
                 pred = pred_score.detach().to('cpu', non_blocking=True)
