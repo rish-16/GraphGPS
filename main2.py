@@ -265,7 +265,8 @@ if __name__ == '__main__':
                 optimizer.zero_grad()
                 batch.to(torch.device(cfg.device))
                 
-                pred, true = model(batch)
+                (pred, true), TIME_STATS = model(batch)
+                print (TIME_STATS)
                 loss, pred_score = compute_loss(pred, true)
                 true = true.detach().to('cpu', non_blocking=True)
                 pred = pred_score.detach().to('cpu', non_blocking=True)

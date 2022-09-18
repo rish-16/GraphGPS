@@ -209,7 +209,13 @@ class RishAttention(nn.Module):
                 # average attention weights over heads
                 attn_weights = attn_weights.mean(dim=0)
 
-        return attn, attn_weights
+        attn_stats = {
+            "dot": DP_END_TIME - DP_START_TIME,
+            "softmax": SOFTMAX_END_TIME - SOFTMAX_START_TIME,
+            "proj": PROJ_END_TIME - PROJ_START_TIME
+        }
+
+        return attn, attn_weights, attn_stats
 
     def apply_sparse_mask(self, attn_weights, tgt_len: int, src_len: int, bsz: int):
         return attn_weights

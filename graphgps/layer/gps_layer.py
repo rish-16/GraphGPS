@@ -183,7 +183,7 @@ class GPSLayer(nn.Module):
             h_dense, mask = to_dense_batch(h, batch.batch)
             if self.global_model_type == 'Transformer':
                 GMP_START = time.time()
-                h_attn = self._sa_block(h_dense, None, ~mask)[mask]
+                h_attn, attn_stats = self._sa_block(h_dense, None, ~mask)[mask]
                 GMP_END = time.time()
                 print ("***TIME FOR GLOBAL MP:", GMP_END - GMP_START)
                 print ("\n")
@@ -213,19 +213,25 @@ class GPSLayer(nn.Module):
         if self.batch_norm:
             h = self.norm2(h)
 
+        time_stats = {
+            "local_mp": LMP_END - LMP_START,
+            "global_mp": GMP_END - GMP_START,
+            "global_attn": attn_stats
+        }
+
         batch.x = h
-        return batch
+        return batch, time_stats
 
     def _sa_block(self, x, attn_mask, key_padding_mask):
         """Self-attention block.
         """
-        x = self.self_attn(x, x, x,
+        x, _, attn_stats = self.self_attn(x, x, x,
                             attn_bias=None,
                             attn_mask=attn_mask,
                             key_padding_mask=key_padding_mask,
                             need_weights=False
-                        )[0]
-        return x
+                        )
+        return x, attn_stats
 
     def _ff_block(self, x):
         """Feed Forward block.
