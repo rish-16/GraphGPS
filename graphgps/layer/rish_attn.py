@@ -31,7 +31,7 @@ class RishAttention(nn.Module):
         vdim=None,
         dropout=0.0,
         bias=True,
-        self_attention=False,
+        self_attention=True,
     ):
         super().__init__()
         self.embed_dim = embed_dim
