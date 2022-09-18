@@ -219,9 +219,11 @@ class GPSLayer(nn.Module):
         """Self-attention block.
         """
         x = self.self_attn(x, x, x,
-                           attn_mask=attn_mask,
-                           key_padding_mask=key_padding_mask,
-                           need_weights=False)[0]
+                            attn_bias=None,
+                            attn_mask=attn_mask,
+                            key_padding_mask=key_padding_mask,
+                            need_weights=False
+                        )[0]
         return x
 
     def _ff_block(self, x):
