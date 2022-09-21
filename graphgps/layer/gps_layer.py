@@ -13,6 +13,7 @@ from graphgps.layer.gatedgcn_layer import GatedGCNLayer
 from graphgps.layer.gine_conv_layer import GINEConvESLapPE
 from graphgps.layer.bigbird_layer import SingleBigBirdLayer
 from graphgps.layer.rish_attn import RishAttention
+# from graphgps.layer.mixer_layer import MLPMixer
 
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange

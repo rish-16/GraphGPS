@@ -38,11 +38,19 @@ data2plot[1].insert(0, "VS-Heads")
 data2plot[2].insert(0, "VS-Dims")
 data2plot[3].insert(0, "VS-Layers")
 
+vvs_data = [
+    ['VVS-Heads', 0.00011200904846191407, 8.149147033691407e-05, 8.344650268554688e-05],
+    ['VVS-Dims', 9.074211120605469e-05, 7.700920104980469e-05, 8.096694946289063e-05],
+    ['VVS-Layers', 0.00011987686157226563, 7.815361022949219e-05, 9.164810180664062e-05]
+]
+
+data2plot.extend(vvs_data)
+
 df = pd.DataFrame(data2plot, columns=["Model", "Dot", "Softmax", "Project"])
 
 df.plot(x='Model',
         kind='bar',
-        stacked=True,
+        stacked=False,
         title='Attention | B=256 | Layer 1 | GINE+MHSA | RWSE')
 plt.xticks(rotation = 45)
 plt.show()

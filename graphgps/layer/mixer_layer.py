@@ -1,7 +1,6 @@
 from torch import nn
 from functools import partial
 from einops.layers.torch import Rearrange, Reduce
-# from torchinfo import summary
 
 pair = lambda x: x if isinstance(x, tuple) else (x, x)
 
@@ -39,5 +38,5 @@ def MLPMixer(*, image_size, channels, patch_size, dim, depth, num_classes, expan
         ) for _ in range(depth)],
         nn.LayerNorm(dim),
         Reduce('b n c -> b c', 'mean'),
-        nn.Linear(dim, 1) # 1 because of the regression task
+        nn.Linear(dim, num_classes)
     )
