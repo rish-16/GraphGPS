@@ -11,7 +11,7 @@ dataset:
   task_type: regression
   transductive: False
   node_encoder: True
-  node_encoder_name: Atom+RWSE+SignNet
+  node_encoder_name: Atom+SignNet+RWSE
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: Bond
@@ -28,16 +28,6 @@ posenc_SignNet:
   post_layers: 3  # Num. layers in \rho model; The original uses the same as in \phi
   phi_hidden_dim: 64
   phi_out_dim: 64
-posenc_LapPE:
-  enable: True
-  eigen:
-    laplacian_norm: none
-    eigvec_norm: L2
-    max_freqs: 1
-  model: DeepSet
-  dim_pe: 4
-  layers: 2
-  raw_norm_type: none
 posenc_RWSE:
   enable: True
   kernel:
